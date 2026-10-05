@@ -1,5 +1,5 @@
 import React,{useMemo,useState,useRef} from 'react';
-import {AlertTriangle,ArrowRight,BarChart3,Building2,CheckCircle2,ChevronDown,CircleCheck,ClipboardList,Coins,Leaf,LogOut,MapPin,Package,Plus,Recycle,Search,ShoppingBag,ShoppingCart,Sparkles,Star,Truck,UserRound,Users,Wallet,Wrench,Zap} from 'lucide-react';
+import {AlertTriangle,ArrowRight,BarChart3,Bell,Building2,CheckCircle2,ChevronDown,CircleCheck,ClipboardList,Coins,Leaf,LogOut,MapPin,Package,Plus,Recycle,Search,ShoppingBag,ShoppingCart,Sparkles,Star,Truck,UserRound,Users,Wallet,Wrench,Zap} from 'lucide-react';
 import {Navigate,useLocation,useNavigate} from 'react-router-dom';
 import {useAuth} from './auth/AuthContext';
 import OrganizationMatchesPage from './OrganizationMatchesPage';
@@ -10,9 +10,9 @@ import {getAvailableMarketplaceInventory,sameMarketplaceComponent} from './proje
 import './workspace.css';
 
 const ROLE_NAV={
- project_maker:[['dashboard','Dashboard','/dashboard',BarChart3],['projects','My Projects','/projects',Wrench],['find-components','Find Components','/find-components',Search],['requirements','My Requirements','/requirements',ClipboardList],['requests','Requests','/requests',Package],['orders','Orders','/orders',ShoppingBag],['delivery','Delivery','/delivery',Truck],['feedback','Feedback','/feedback',Star],['impact','Savings & Impact','/impact',Leaf],['profile','Profile','/profile',UserRound]],
- seller:[['dashboard','Dashboard','/dashboard',BarChart3],['inventory','My Inventory','/inventory',Package],['listings','My Listings','/listings',ShoppingBag],['add-component','Add Component','/add-component',Plus],['requests','Requests','/requests',ClipboardList],['orders','Orders','/orders',ShoppingCart],['delivery','Delivery','/delivery',Truck],['payments','Payments','/payments',Wallet],['feedback','Feedback','/feedback',Star],['impact','My Impact','/impact',Leaf],['profile','Profile','/profile',UserRound]],
- organization:[['dashboard','Dashboard','/dashboard',BarChart3],['resources','Resources','/resources',Package],['listings','Listings','/listings',ShoppingBag],['project-requests','Project Requests','/project-requests',ClipboardList],['matches','Matches','/matches',Sparkles],['users','Users','/users',Users],['orders','Orders','/orders',ShoppingCart],['delivery','Delivery','/delivery',Truck],['analytics','Analytics','/analytics',BarChart3],['impact','Impact','/impact',Leaf],['profile','Profile','/profile',UserRound]]
+ project_maker:[['dashboard','Dashboard','/dashboard',BarChart3],['projects','My Projects','/projects',Wrench],['find-components','Find Components','/find-components',Search],['requirements','My Requirements','/requirements',ClipboardList],['requests','Requests','/requests',Package],['notifications','Notifications','/notifications',Bell],['orders','Orders','/orders',ShoppingBag],['delivery','Delivery','/delivery',Truck],['feedback','Feedback','/feedback',Star],['impact','Savings & Impact','/impact',Leaf],['profile','Profile','/profile',UserRound]],
+ seller:[['dashboard','Dashboard','/dashboard',BarChart3],['inventory','My Inventory','/inventory',Package],['listings','My Listings','/listings',ShoppingBag],['add-component','Add Component','/add-component',Plus],['requests','Requests','/requests',ClipboardList],['notifications','Notifications','/notifications',Bell],['orders','Orders','/orders',ShoppingCart],['delivery','Delivery','/delivery',Truck],['payments','Payments','/payments',Wallet],['feedback','Feedback','/feedback',Star],['impact','My Impact','/impact',Leaf],['profile','Profile','/profile',UserRound]],
+ organization:[['dashboard','Dashboard','/dashboard',BarChart3],['resources','Resources','/resources',Package],['listings','Listings','/listings',ShoppingBag],['project-requests','Project Requests','/project-requests',ClipboardList],['notifications','Notifications','/notifications',Bell],['matches','Matches','/matches',Sparkles],['users','Users','/users',Users],['orders','Orders','/orders',ShoppingCart],['delivery','Delivery','/delivery',Truck],['analytics','Analytics','/analytics',BarChart3],['impact','Impact','/impact',Leaf],['profile','Profile','/profile',UserRound]]
 };
 const NEW_PRICES={'ESP32 DevKit':590,'SG90 Servo':120,'Arduino Uno':650,'LDR Sensor':35,'RFID RC522':180,'0.96 OLED':170,'MPU6050':210,'18650 Battery':140,'Raspberry Pi 3':2200};
 const WEIGHT_GRAMS={'ESP32 DevKit':35,'SG90 Servo':9,'Arduino Uno':25,'LDR Sensor':2,'RFID RC522':12,'0.96 OLED':8,'MPU6050':4,'18650 Battery':45,'Raspberry Pi 3':45};
@@ -63,6 +63,7 @@ export function WorkspaceApp(){
  const ownRequests=data.requests.filter(item=>role==='project_maker'?item.maker_id===profile.id:item.seller_id===profile.id);
  const completedRequests=data.requests.filter(item=>item.status==='TRANSFERRED'&&(role==='project_maker'?item.maker_id===profile.id:item.seller_id===profile.id));
  const requestsForRole=role==='project_maker'?data.requests.filter(item=>item.maker_id===profile.id):data.requests.filter(item=>item.seller_id===profile.id);
+ const unreadNotifications=(data.notifications??[]).filter(item=>item.recipientUserId===profile.id&&!item.read).length;
  const activeOwnedQuantity=ownListings.filter(item=>!['CANCELLED','SOLD','TRANSFERRED'].includes(item.status)).reduce((sum,item)=>sum+item.available_quantity+item.reserved_quantity,0);
  const inventoryOwned=ownInventory.reduce((sum,item)=>sum+item.owned_quantity,0);
  const availableOwned=ownListings.reduce((sum,item)=>sum+item.available_quantity,0);
@@ -113,10 +114,14 @@ export function WorkspaceApp(){
   if(profile.role!=='project_maker'){setError('Organizations review maker requests from Project Requests.');return}
   const qty=Number(quantity);
   if(qty<1||qty>listing.available_quantity){setError('The available quantity changed. Choose a smaller quantity.');return}
-  const duplicate=data.requests.some(request=>request.project_id===project.id&&request.listing_id===listing.id&&['REQUESTED','ACCEPTED'].includes(request.status));
-  if(duplicate){setError('A request for this listing is already active.');return}
-  const nextRequest={id:createId('request'),listing_id:listing.id,project_id:project.id,maker_id:profile.id,maker_name:displayName,seller_id:listing.owner_id,component_name:listing.component_name,quantity:qty,status:'REQUESTED',delivery_status:'REQUESTED',created_at:new Date().toISOString(),timeline:[{status:'REQUESTED',at:new Date().toISOString()}],demo:true};
-  updateData(current=>({...current,requests:[nextRequest,...current.requests]}));
+  const eligible=data.listings.filter(item=>item.status==='AVAILABLE'&&item.available_quantity>0&&sameMarketplaceComponent(item.component_name,listing.component_name));
+  const providers=eligible.filter(item=>!data.requests.some(request=>request.project_id===project.id&&request.listing_id===item.id&&['REQUESTED','ACCEPTED'].includes(request.status)));
+  if(!providers.length){setError('Requests are already active for every available provider of this component.');return}
+  if(!window.confirm(`Request ${qty} × ${listing.component_name} for ${project.name}? ${providers.length} eligible provider(s) will be notified.`))return;
+  const now=new Date().toISOString();
+  const nextRequests=providers.map(item=>({id:createId('request'),listing_id:item.id,project_id:project.id,project_name:project.name,maker_id:profile.id,maker_name:displayName,requesterId:profile.id,requesterName:displayName,requesterRole:'project_maker',seller_id:item.owner_id,providerId:item.owner_id,providerName:item.owner_name,providerRole:item.owner_type,inventory_id:item.inventory_id,component_name:item.component_name,componentId:sameMarketplaceComponent(item.component_name,item.component_name)?item.component_name:null,quantity:Math.min(qty,item.available_quantity),requestedQuantity:Math.min(qty,item.available_quantity),status:'REQUESTED',delivery_status:'REQUESTED',created_at:now,updatedAt:now,timeline:[{status:'REQUESTED',at:now}],demo:true}));
+  const notifications=nextRequests.map(request=>({id:createId('notification'),recipientUserId:request.providerId,recipientRole:request.providerRole,requestId:request.id,projectId:project.id,componentName:request.component_name,quantity:request.quantity,requesterUserId:profile.id,requesterName:displayName,type:'COMPONENT_REQUEST',title:'New Component Request',message:`${displayName} requested ${request.component_name} × ${request.quantity} for ${project.name}.`,read:false,createdAt:now}));
+  updateData(current=>({...current,requests:[...nextRequests,...current.requests],notifications:[...notifications,...(current.notifications??[])]}));
   setError('');
  }
  function respondToRequest(requestId,decision){
@@ -132,8 +137,10 @@ export function WorkspaceApp(){
     return item;
    });
    const now=new Date().toISOString();
-  const nextRequests=current.requests.map(item=>item.id===requestId?{...item,status:decision,delivery_status:decision==='ACCEPTED'?'ACCEPTED':decision,timeline:[...(item.timeline??[]),{status:decision,at:now}]}:item);
-   return {...current,listings:nextListings,requests:nextRequests};
+   const nextRequests=current.requests.map(item=>item.id===requestId?{...item,status:decision,delivery_status:decision==='ACCEPTED'?'ACCEPTED':decision,updatedAt:now,timeline:[...(item.timeline??[]),{status:decision,at:now}]}:item);
+   const type=decision==='ACCEPTED'?'REQUEST_ACCEPTED':'REQUEST_REJECTED';
+   const notification={id:createId('notification'),recipientUserId:request.maker_id,recipientRole:'project_maker',requestId,projectId:request.project_id,componentName:request.component_name,quantity:request.quantity,requesterUserId:profile.id,requesterName:displayName,type,title:decision==='ACCEPTED'?'Request Accepted':'Request Rejected',message:`${displayName} ${decision==='ACCEPTED'?'accepted':'could not fulfill'} your request for ${request.component_name} × ${request.quantity}.`,read:false,createdAt:now};
+   return {...current,listings:nextListings,requests:nextRequests,notifications:[notification,...(current.notifications??[])]};
   });
  }
  function cancelRequest(requestId){
@@ -159,7 +166,8 @@ export function WorkspaceApp(){
   const deliveredListing=current.listings.find(item=>item.id===request.listing_id);
   const nextListings=current.listings.map(listing=>listing.id===request.listing_id&&nextStatus==='DELIVERED'?{...listing,reserved_quantity:Math.max(0,listing.reserved_quantity-request.quantity),transferred_quantity:listing.transferred_quantity+request.quantity,status:listing.available_quantity>0?'AVAILABLE':listing.reserved_quantity-request.quantity>0?'RESERVED':'TRANSFERRED'}:listing);
   const nextInventory=nextStatus==='DELIVERED'?current.inventories.map(item=>item.id===deliveredListing?.inventory_id?{...item,owned_quantity:Math.max(0,item.owned_quantity-request.quantity)}:item):current.inventories;
-   return {...current,listings:nextListings,requests:nextRequests,inventories:nextInventory};
+   const notification=nextStatus==='DELIVERED'?{id:createId('notification'),recipientUserId:request.maker_id,recipientRole:'project_maker',requestId,projectId:request.project_id,componentName:request.component_name,quantity:request.quantity,type:'COMPONENT_DELIVERED',title:'Component Delivered',message:`${request.component_name} × ${request.quantity} is now available for your project.`,read:false,createdAt:now}:null;
+   return {...current,listings:nextListings,requests:nextRequests,inventories:nextInventory,notifications:notification?[notification,...(current.notifications??[])]:current.notifications};
   });
  }
 
@@ -177,6 +185,7 @@ export function WorkspaceApp(){
   {route==='listings'&&role!=='project_maker'&&<ListingsPage {...pageProps}/>}
   {route==='add-component'&&role==='seller'&&<AddInventoryPage {...pageProps}/>}
   {(['requests','project-requests'].includes(route))&&<RequestsPage {...pageProps}/>}
+  {route==='notifications'&&<NotificationsPage {...pageProps} notifications={(data.notifications??[]).filter(item=>item.recipientUserId===profile.id)} />}
   {(['orders','delivery'].includes(route))&&<DeliveryPage {...pageProps}/>}
   {route==='payments'&&role==='seller'&&<PaymentsPage {...pageProps}/>}
   {(['impact','analytics'].includes(route))&&<ImpactPage {...pageProps} data={role==='organization'?orgImpactData:data}/>}
@@ -187,7 +196,7 @@ export function WorkspaceApp(){
  </>;
 
  return <div className="app workspaceApp">
-  <aside className="sidebar"><div className="brand"><div className="brandmark"><Recycle size={22}/></div><div><b>SecondLife</b><span>{ROLE_CONFIG[role].title}</span></div></div><div className="nav">{navigation.map(([key,label,path,Icon])=><button key={key} className={route===key?'active':''} onClick={()=>routeTo(path)}><Icon size={18}/><span>{label}</span></button>)}</div><div className="sidebarBottom"><div className="role"><UserRound size={17}/><div><small>Signed in as</small><strong>{ROLE_CONFIG[role].singular}</strong></div></div><DemoBadge/></div></aside>
+  <aside className="sidebar"><div className="brand"><div className="brandmark"><Recycle size={22}/></div><div><b>SecondLife</b><span>{ROLE_CONFIG[role].title}</span></div></div><div className="nav">{navigation.map(([key,label,path,Icon])=><button key={key} className={route===key?'active':''} onClick={()=>routeTo(path)}><Icon size={18}/><span>{label}</span>{key==='notifications'&&unreadNotifications>0&&<b className="notificationBadge">{unreadNotifications}</b>}</button>)}</div><div className="sidebarBottom"><div className="role"><UserRound size={17}/><div><small>Signed in as</small><strong>{ROLE_CONFIG[role].singular}</strong></div></div><DemoBadge/></div></aside>
   <main className="main workspaceMain"><header><div><div className="eyebrow">CIRCULAR ELECTRONICS PLATFORM <span className="headerDot">·</span> {ROLE_CONFIG[role].title}</div><h1>{route==='dashboard'?dashboardHeading(role):currentNav?.[1]??pathTitle(route)}</h1></div><div className="workspaceHeaderActions"><DemoBadge/><div className="profileControl"><button className="profile" aria-haspopup="menu" aria-expanded={menuOpen} onClick={()=>setMenuOpen(!menuOpen)}>{profile.avatar_url?<img src={profile.avatar_url} alt=""/>:<span>{initials}</span>}{displayName}<ChevronDown size={15}/></button>{menuOpen&&<div className="profileMenu" role="menu"><span className="profileEmail">DEMO PROFILE · {ROLE_CONFIG[role].title}</span><button role="menuitem" onClick={goProfile}>Profile settings</button><button role="menuitem" onClick={logout} disabled={signingOut}><LogOut size={15}/>{signingOut?'Signing out...':'Sign out'}</button></div>}</div></div></header>{page}</main>
  </div>;
 }
@@ -293,6 +302,13 @@ function ListingsPage({role,data,ownListings,ownInventory,createListing,setError
 function RequestsPage({role,data,requestsForRole,respondToRequest,cancelRequest}){
  const seller=role!=='project_maker';
  return <section className="workspacePage"><SectionTitle eyebrow={seller?'SELLER REQUESTS':'PROJECT MAKER REQUESTS'} title={seller?'Project requests':'My requests'} description="Requested stock remains available until accepted. Acceptance reserves quantity; delivery completion records transfer."/><div className="requestList">{requestsForRole.map(request=>{const listing=data.listings.find(item=>item.id===request.listing_id);const project=data.projects.find(item=>item.id===request.project_id);return <article className="requestCard" key={request.id}><div className="requestCardHeading"><div><span className="eyebrow">{seller?request.maker_name:listing?.owner_name}</span><h3>{request.component_name} × {request.quantity}</h3><p>{project?.name||'Marketplace project'} · {listing?.location||'Location not specified'}</p></div><StatusPill value={request.delivery_status||request.status}/></div><div className="requestStockLine"><span>Listing available: {listing?.available_quantity??0}</span><span>Reserved: {listing?.reserved_quantity??0}</span><span>Type: {listing?.listing_type??'N/A'}</span><span>Subtotal: {listing?.listing_type==='SELL'?money((listing.price_per_unit??0)*request.quantity):'₹0 donation'}</span></div><DeliveryTimeline request={request}/><div className="requestActions">{seller&&request.status==='REQUESTED'&&<><button className="primary small" onClick={()=>respondToRequest(request.id,'ACCEPTED')} disabled={(listing?.available_quantity??0)<request.quantity}>Accept and reserve</button><button className="secondary small" onClick={()=>respondToRequest(request.id,'REJECTED')}>Reject</button></>}{!seller&&['REQUESTED','ACCEPTED'].includes(request.status)&&<button className="secondary small" onClick={()=>cancelRequest(request.id)}>Cancel request</button>}{seller&&request.status==='ACCEPTED'&&<span className="listingFormNote">Use Delivery to advance this request.</span>}</div></article>})}{!requestsForRole.length&&<EmptyState title="No requests yet" description={seller?'Project-maker requests for your listings will appear here.':'Your listing requests and their status will appear here.'}/>}</div></section>
+}
+
+function NotificationsPage({notifications,updateData,routeTo,role}){
+ const markRead=id=>updateData(current=>({...current,notifications:(current.notifications??[]).map(item=>item.id===id?{...item,read:true}:item)}));
+ const markAll=()=>updateData(current=>({...current,notifications:(current.notifications??[]).map(item=>item.recipientRole===role?{...item,read:true}:item)}));
+ function open(notification){markRead(notification.id);routeTo(role==='organization'?'/project-requests':'/requests')}
+ return <section className="workspacePage"><SectionTitle eyebrow="MARKETPLACE ACTIVITY" title="Notifications" description="Requests and lifecycle updates are delivered to the relevant marketplace participant." action={<button className="secondary small" onClick={markAll}>Mark all as read</button>}/><div className="requestList">{notifications.map(notification=><article className={`requestCard notificationCard ${notification.read?'':'unread'}`} key={notification.id}><div className="requestCardHeading"><div><span className="eyebrow">{notification.type.replaceAll('_',' ')}</span><h3>{notification.title}</h3><p>{notification.message}</p></div><StatusPill value={notification.read?'READ':'REQUESTED'}/></div><div className="requestActions"><button className="secondary small" onClick={()=>markRead(notification.id)}>Mark as read</button>{notification.requestId&&<button className="primary small" onClick={()=>open(notification)}>View request <ArrowRight size={14}/></button>}</div></article>)}{!notifications.length&&<EmptyState title="No notifications yet" description="Marketplace requests and responses will appear here."/>}</div></section>
 }
 
 function DeliveryTimeline({request}){const current=request.delivery_status||request.status;const states=DELIVERY_STATES.filter(status=>status!=='REQUESTED'||request.timeline?.some(item=>item.status==='REQUESTED'));return <div className="deliveryTimeline">{states.map((status,index)=>{const reached=(request.timeline??[]).some(item=>item.status===status)||status===current;return <div className={`timelineStep ${reached?'reached':''} ${current===status?'current':''}`} key={status}><span>{reached?<CheckCircle2 size={15}/>:index+1}</span><small>{status.replaceAll('_',' ')}</small></div>})}</div>}

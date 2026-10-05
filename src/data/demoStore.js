@@ -68,7 +68,7 @@ function initialDemoData(){
   {id:'request-demo-2',listing_id:'list-ldr-priya',project_id:'project-demo-plant',maker_id:'maker-ravi',maker_name:'Ravi Kumar',seller_id:'seller-priya',inventory_id:'inv-priya-ldr',component_name:'LDR Sensor',quantity:2,status:'ACCEPTED',delivery_status:'PACKED',created_at:'2026-10-02T11:15:00.000Z',timeline:[{status:'REQUESTED',at:'2026-10-02T11:15:00.000Z'},{status:'ACCEPTED',at:'2026-10-02T11:18:00.000Z'},{status:'PACKED',at:'2026-10-02T14:00:00.000Z'}],demo:true},
   {id:'request-demo-3',listing_id:'list-esp-ssit',project_id:'project-demo-security',maker_id:'maker-asha',maker_name:'Asha Raman',seller_id:'org-ssit',inventory_id:'inv-ssit-esp',component_name:'ESP32 DevKit',quantity:5,status:'TRANSFERRED',delivery_status:'DELIVERED',created_at:'2026-09-28T10:15:00.000Z',timeline:[{status:'REQUESTED',at:'2026-09-27T09:00:00.000Z'},{status:'ACCEPTED',at:'2026-09-27T10:00:00.000Z'},{status:'PACKED',at:'2026-09-27T12:00:00.000Z'},{status:'PICKED_UP',at:'2026-09-28T08:00:00.000Z'},{status:'IN_TRANSIT',at:'2026-09-28T09:00:00.000Z'},{status:'DELIVERED',at:'2026-09-28T10:15:00.000Z'}],demo:true}
  ];
- return {profiles:demoProfiles,inventories,listings,projects,requests,feedback:[]};
+ return {profiles:demoProfiles,inventories,listings,projects,requests,notifications:[],feedback:[]};
 }
 
 const STORAGE_KEY='secondlife-marketplace-data-v2';
@@ -80,7 +80,7 @@ export function loadDemoData(){
   if(stored){
    const parsed=JSON.parse(stored);
    const defaults=initialDemoData();
-   return {...defaults,...parsed};
+   return {...defaults,...parsed,notifications:parsed.notifications??[]};
   }
  }catch{window.localStorage.removeItem(STORAGE_KEY)}
  return initialDemoData();
