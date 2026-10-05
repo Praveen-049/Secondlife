@@ -1,0 +1,55 @@
+.authField input,.accountField input,.accountField select{min-width:0;width:100%;height:100%;border:0;outline:0;background:transparent;font:400 13px 'DM Sans',sans-serif;color:#243329}
+.authField input::placeholder,.accountField input::placeholder{color:#a1aaa3}
+.roleChoices{border:0;margin:0;padding:0;display:grid;gap:8px}
+.roleChoices legend{padding:0 0 8px;color:#34443a;font-size:12px;font-weight:700}
+.roleChoice{width:100%;min-height:57px;border:1px solid #dce3dc;border-radius:7px;background:#fff;color:#304036;display:flex;align-items:center;gap:11px;text-align:left;padding:9px 11px;cursor:pointer;transition:border-color .15s,background .15s}
+.roleChoice>svg:first-child{color:#65834e;flex:none}
+.roleChoice>svg:last-child{margin-left:auto;color:#466d37;flex:none}
+.roleChoice>span{display:grid;gap:3px;min-width:0}
+.roleChoice strong{font:700 9px 'DM Sans',sans-serif;letter-spacing:.8px}
+.roleChoice small{font:400 10px/1.4 'DM Sans',sans-serif;color:#78847b}
+.roleChoice:hover,.roleChoice.selected{border-color:#78955e;background:#f6faef}
+.roleChoice:focus-visible{outline:3px solid rgba(117,156,91,.3);outline-offset:2px}
+.registerForm{gap:12px}
+.registerForm .authInputWrap{height:43px}
+.registerForm .authField{gap:6px}
+.authSubmit:disabled{opacity:.66;cursor:wait}
+.authLoading{min-height:100vh;min-height:100svh;background:#fbfcfa;color:#546157;display:flex;align-items:center;justify-content:center;gap:11px;font-size:13px}
+.onboardingPage,.accountPage{min-height:100vh;min-height:100svh;background:#f5f7f4;color:#1b2a21;padding:28px clamp(18px,5vw,64px)}
+.onboardingPanel{width:min(100%,600px);margin:20px auto;background:#fff;border:1px solid #e2e8e2;border-radius:12px;padding:clamp(23px,5vw,42px);box-shadow:0 12px 40px rgba(26,48,33,.055)}
+.onboardingPanel .authBrand{margin-bottom:35px;color:#19271f}
+.onboardingPanel .welcomeLabel{margin-bottom:10px}
+.onboardingPanel h1,.accountContent h1{font:700 28px/1.25 Manrope,sans-serif;margin:0;color:#19271f}
+.onboardingPanel>p,.accountContent>p{font-size:13px;line-height:1.65;color:#77827a;margin:9px 0 24px}
+.onboardingPanel .authForm{gap:17px}
+.accountHeader{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.accountHeader .brand{padding:0;color:#132a1d}
+.accountBack{display:inline-flex;align-items:center;gap:8px;border:1px solid #dfe6df;border-radius:7px;background:#fff;color:#405148;padding:9px 12px;font:600 12px 'DM Sans',sans-serif;cursor:pointer}
+.accountBack:hover{border-color:#9caf9a;background:#f9fbf8}
+.accountContent{width:min(100%,660px);margin:52px auto;background:#fff;border:1px solid #e1e7e1;border-radius:10px;padding:clamp(22px,5vw,42px)}
+.accountEyebrow{font-size:10px;letter-spacing:1.45px;color:#668150;font-weight:800;margin-bottom:10px}
+.accountContent>p{margin-bottom:28px}
+.accountForm{display:grid;gap:17px}
+.avatarPreview{width:74px;height:74px;border-radius:50%;overflow:hidden;background:#e7f2db;color:#33573a;display:grid;place-items:center;font:700 20px Manrope,sans-serif}
+.avatarPreview img{width:100%;height:100%;object-fit:cover}
+.accountField{display:grid;gap:7px;color:#34443a;font-size:12px;font-weight:700}
+.accountField input,.accountField select{height:44px;border:1px solid #dce3dc;border-radius:7px;background:#fff;padding:0 12px}
+.accountField input:focus,.accountField select:focus{border-color:#749c5c;box-shadow:0 0 0 3px rgba(117,156,91,.12)}
+.accountField input:disabled{background:#f4f6f3;color:#7f8981;cursor:not-allowed}
+.accountField small{color:#89938b;font-size:10px;font-weight:400}
+.accountMeta{display:flex;justify-content:space-between;gap:18px;border-top:1px solid #e8ece7;padding-top:15px;color:#758077;font-size:11px}
+.accountMeta strong{color:#34443a;font-weight:600}
+.profileControl{position:relative}
+.profile{cursor:pointer}
+.profile>img{width:29px;height:29px;object-fit:cover;border-radius:50%}
+.profileMenu{position:absolute;z-index:20;right:0;top:calc(100% + 8px);width:220px;padding:7px;background:#fff;border:1px solid #e0e7e0;border-radius:8px;box-shadow:0 10px 30px rgba(18,40,26,.13);display:grid;gap:3px}
+.profileMenu>button{width:100%;min-height:36px;border:0;border-radius:5px;background:transparent;color:#304137;text-align:left;padding:8px 9px;display:flex;align-items:center;gap:8px;font:500 12px 'DM Sans',sans-serif;cursor:pointer}
+.profileMenu>button:hover{background:#f2f6ef}
+.profileMenu>button:disabled{opacity:.6;cursor:wait}
+.profileEmail{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:8px 9px 10px;color:#7c887f;font-size:10px;border-bottom:1px solid #edf0ec;margin-bottom:3px}
+.profileMenuError{padding:6px 9px;color:#a73535;font-size:10px}
+.authSwitch a{color:#426a39;font-weight:700;text-decoration:none}
+.authSwitch a:hover{text-decoration:underline;text-underline-offset:3px}
+.accountPage .authSubmit{margin-top:2px}
+@media(max-width:760px){.onboardingPage,.accountPage{padding:18px 15px}.onboardingPanel{margin:10px auto}.onboardingPanel .authBrand{margin-bottom:26px}.accountContent{margin:30px auto}.accountHeader .brand{display:none}.accountHeader{justify-content:flex-start}}
+@media(max-width:420px){.roleChoice{min-height:55px}.roleChoice small{font-size:9px}.accountMeta{align-items:flex-start;flex-direction:column;gap:5px}}
