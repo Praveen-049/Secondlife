@@ -3185,3 +3185,5 @@ img {
 .product-meta > span {
   white-space: nowrap;
 }
+
+} /* end @scope (.projectMakerModule) */
